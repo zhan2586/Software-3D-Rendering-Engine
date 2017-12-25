@@ -1,6 +1,6 @@
 # Software 3D Rendering Engine 
 
-This is a software implementation of 3D rasterization rendering pipeline. Different from what people usually do with OpenGL, most funcitonalities handled by OpenGL or GPU are implemented from scratch with its conventional algorithms in this project, for example, camera projection, frame buffer, texture lookup, lighting, shadow, 3D mathematics, .etc.
+This project is to demonstrate rasteraization 3D rendering pipeline. Every rendering stage of this project is implemented from scratch using conventional algorithms, for example, camera projection, texture lookup, framebuffer, lighting, shadow, 3D mathematics, .etc. Moreover, this project also has functions to put the software rendering pipeline to GPU using CG shader.
 
 ## Environment
 * Windows 10 x64  
@@ -56,9 +56,9 @@ This is a software implementation of 3D rasterization rendering pipeline. Differ
 
 ### Guide  
 * In main.cpp, change current demo by changing the following line:  
-~~~
-#define USING_DEMO SOFTWARE_SM_PTM_DEMO  
-~~~
+  ~~~
+  #define USING_DEMO SOFTWARE_SM_PTM_DEMO  
+  ~~~
 * Then Build and run under specified environment  
 
 ### Software Shadow Mapping and Projective Texture Mapping Demo  
@@ -71,7 +71,7 @@ This is a software implementation of 3D rasterization rendering pipeline. Differ
   
 * https://youtu.be/sYHK0IVA1ag
   * Invisibility with projector   
-    <img src="https://drive.google.com/uc?id=130u_4HKSQ-63vcI6aQ3g4NnoBwhIRf0U
+    <img src="https://drive.google.com/uc?id=130u_4HKSQ-63vcI6aQ3g4NnoBwhIRf0U" width="400"> 
 
 ### Software Environment Mapping Demo
 * https://youtu.be/Yn06Psa5j9w  

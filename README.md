@@ -8,18 +8,49 @@ A software implementation of 3D rasterization rendering pipeline, for example, p
 
 ## Relevant Headers
 ~~~
-  AABB.h // Axis aligned bounding box  
-  Camera.h // Software implementation of planar pinhole camera  
-  cubemap.h // Software implementation of cubemap  
-  framebuffer.h // Software implementation of framebuffer  
-  light.h // lighting model  
-  m33.h // matrix and relevant operation implementation  
-  mesh.h // binary triangle mesh support  
-  scene.h // scene manager  
-  v3f.h // float3 vector and relevant operation implementation  
-
-  // additional hardware implementation  
-  CGInterface.h // GPU support using CG shader  
+  /* Axis Aligned Bounding Box */
+  AABB.h 
+  /* 
+   * Constructor for software pinhole camera  
+   * Project and unproject function
+   * Translation, pan, tilt, roll function
+   * Camera Interposlation
+   * Support for GPU view and projection matrix
+  */
+  Camera.h 
+  /* 
+   * Constructor for cube map  
+   * Bilinear look up for cube map
+  */
+  cubemap.h  
+  /* 
+   * Constructor for framebuffer 
+   * Zbuffer, Color buffer, Alpha buffer set and clear
+   * Load and save frambuffer
+   * Nearest lookup and Bilinear lookup
+   * Use as depth buffer, texture buffer or display image
+  */
+  framebuffer.h  
+  /* 
+   * Constructor for point light
+   * Light camera
+  */
+  light.h
+  /* 3D mathematic funcitons */
+  m33.h
+  v3f.h
+  /* 
+   * Constructor for triangle mesh
+   * Load triangle mesh from binary model
+   * Scale, rotate, and translate mesh
+   * Render mesh in fill mode / wireframe
+   * Render mesh with / without lighting / textures
+  */
+  mesh.h
+  /* scene manager */
+  scene.h
+  /* GPU interface */  
+  CGInterface.h
 ~~~
 ## Demos
 
@@ -30,20 +61,21 @@ A software implementation of 3D rasterization rendering pipeline, for example, p
 ~~~
 * Then Build and run under specified environment  
 
-### SOFTWARE SHADOW MAPPING AND PROJECTIVE TEXTURE MAPPING DEMO  
+### Software Shadow Mapping and Projective Texture Mapping Demo  
 
-* Shadow mapping  
-https://youtu.be/CttNZ9FeePo   
-* Porjective texture mapping (Transparent texture projector and Invisibility with projector)  
-https://youtu.be/sYHK0IVA1ag  
+* https://youtu.be/CttNZ9FeePo 
+  * Shadow mapping  
+* https://youtu.be/sYHK0IVA1ag
+  * Porjective texture mapping (Transparent texture projector and Invisibility with projector)  
+  
 
-### SOFTWARE ENVIRONMENT MAPPING DEMO  
+### Software Environment Mapping Demo
 * https://youtu.be/Yn06Psa5j9w  
-* Per-pixel reflected ray look up for reflector
-* Eye-rays look up for environment
-* Refraction and fake Fresnel
+  * Per-pixel reflected ray look up for reflector
+  * Eye-rays look up for environment
+  * Refraction and fake Fresnel
 
-### HARDWARE RENDERING DEMO  
+### Hardware Extension using CG shader  
 * https://youtu.be/Ucnvez-XPNo  
-* A demonstration for hardware rendering support using CG shader.  
-* Reflection Approximation by Imposter. The reflection of the back teapot is rendered by approximating the front teapot with billboard. The texture of billboard is precomputed in main.cpp and looked up in GPU shader, besides I created a new window to display the texture of billboard.  
+  * A demonstration for hardware rendering support using CG shader.  
+  * Reflection Approximation by Imposter. The reflection of the back teapot is rendered by approximating the front teapot with billboard. The texture of billboard is precomputed in main.cpp and looked up in GPU shader, besides I created a new window to display the texture of billboard.  

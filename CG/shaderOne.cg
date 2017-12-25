@@ -1,0 +1,162 @@
+struct VertexDataInput {
+	float4 vertex: POSITION;
+	float3 color: COLOR;
+	float3 normal: NORMAL;
+	float3 texcoord : TEXCOORD0;
+};
+
+struct VertexDataOutput {
+	float4 projv  : POSITION;
+	float3 color : COLOR;
+	float3 tex : TEXCOORD0;
+	float3 o_vertex : TEXCOORD1;
+	float3 o_normal : TEXCOORD2;
+};
+
+struct PixelDataOutput {
+	float3 color : COLOR;
+};
+
+bool ComputeIntersectionRT(float3 v0, float3 v1, float3 v2, float3 rd, float3 ro, out float3 hitpoint);
+bool ShadowForBox(float3 ro, float3 rd, float3 box_verts[8]);
+
+VertexDataOutput VertexMain(VertexDataInput vdi, uniform float4x4 modelViewProj) {
+
+	VertexDataOutput ret;
+	ret.projv = mul(modelViewProj, vdi.vertex);
+	ret.color = vdi.color;
+	ret.tex = vdi.texcoord;
+	ret.o_vertex = vdi.vertex.xyz;
+	ret.o_normal = vdi.normal;
+	return ret;
+
+}
+
+PixelDataOutput FragmentMain(	VertexDataOutput pdi, 
+								uniform sampler2D tex0, 
+								uniform sampler2D billboard, 
+								uniform sampler2D depth_billboard,
+								uniform float passf, 
+								uniform float3 bb_verts[4],
+								uniform float3 eye,
+								uniform samplerCUBE cube_texture,
+								uniform float3 box0_verts[8], 
+								uniform float3 box1_verts[8],
+								uniform float passf_shadow
+								) {
+	PixelDataOutput ret;
+	ret.color = float3(1.f, 1.f, 1.f);
+	float3 light_center = float3(-2.f, 2.0f, -3.5f);
+	float light_bias = 0.2f;
+	float3 light_pos[4] = { light_center + float3(-light_bias, 0.f, -light_bias),
+							light_center + float3(light_bias, 0.f, -light_bias),
+							light_center + float3(light_bias, 0.f, light_bias),
+							light_center + float3(-light_bias, 0.f, light_bias)
+							};
+	if (floor(passf) == 2) {
+		ret.color = tex2D(billboard, pdi.tex.xy).rgb;
+	} else if (floor(passf) == 1) {
+		ret.color = pdi.color;
+		float3 hitpoint0 = pdi.o_vertex;
+		float3 n = normalize(pdi.o_normal);
+		float3 ray_in = normalize((eye - hitpoint0));
+		float3 ray_out = normalize(reflect(ray_in, n));
+		float3 hitpoint1;
+		float2 tex_bb[4] = {float2(1.f, 1.f), float2(0.f, 1.f), float2(0.f, 0.f), float2(1.f, 0.f)};
+		ret.color = texCUBE(cube_texture, ray_out);
+		if (ComputeIntersectionRT(bb_verts[0], bb_verts[1], bb_verts[2], ray_out, hitpoint0, hitpoint1)) {
+			// ret.color = pdi.color;
+			float t = hitpoint1[0];
+			float u = hitpoint1[1];
+			float v = hitpoint1[2];
+			if (t < 0.f) {
+				float2 _texcoord = tex_bb[0] * (1.f - u - v) + tex_bb[1] * u + tex_bb[2] * v;
+				float _z = tex2D(depth_billboard, _texcoord.xy);
+				if (_z != 0.f) {
+					float3 color_lookup = tex2D(billboard, _texcoord.xy).rgb;
+					ret.color = color_lookup;
+				}
+			}
+		} else if (ComputeIntersectionRT(bb_verts[2], bb_verts[3], bb_verts[0], ray_out, hitpoint0, hitpoint1)) {
+			// ret.color = pdi.color;
+			float t = hitpoint1[0];
+			float u = hitpoint1[1];
+			float v = hitpoint1[2];
+			if (t < 0.f) {
+				float2 _texcoord = tex_bb[2] * (1.f - u - v) + tex_bb[3] * u + tex_bb[0] * v;
+				float _z = tex2D(depth_billboard, _texcoord.xy);
+				if (_z != 0.f) {
+					float3 color_lookup = tex2D(billboard, _texcoord.xy).rgb;
+					ret.color = color_lookup;
+				}
+			}
+		}
+	} else if (floor(passf) == 3) {
+		ret.color = pdi.color;
+	} else if (floor(passf) == 4) {
+		ret.color = texCUBE(cube_texture, normalize(eye - pdi.o_vertex));
+	} else if (floor(passf) == 5) {
+		ret.color = tex2D(tex0, pdi.tex.xy).rgb;
+		float lit_ratio = 1.f;
+		if (ShadowForBox(pdi.o_vertex, normalize(light_pos[0] - pdi.o_vertex), box1_verts)) lit_ratio -= 0.25f;
+		if (floor(passf_shadow) == 0) {
+			bool isInShadow = ShadowForBox(pdi.o_vertex, normalize(light_pos[0] - pdi.o_vertex), box0_verts);
+			if (isInShadow) lit_ratio -= 0.25f;
+		} else {
+			bool isInShadow = ShadowForBox(pdi.o_vertex, normalize(light_pos[1] - pdi.o_vertex), box1_verts);
+			if (isInShadow) lit_ratio -= 0.25f;
+		}
+		ret.color *= lit_ratio;
+	} else if (floor(passf) == 6) {
+		ret.color = float3(0.f, 1.f, 1.f);
+		if (ShadowForBox(pdi.o_vertex, normalize(light_pos[0] - pdi.o_vertex), box1_verts)) ret.color *= 0.5f;
+	} else if (floor(passf) == 7) {
+		ret.color = float3(0.f, 1.f, 1.f);
+	}
+	return ret;
+
+}
+
+bool ComputeIntersectionRT(float3 v0, float3 v1, float3 v2, float3 rd, float3 ro, out float3 hitpoint) {
+	float3 v0v1 = v1 - v0;
+	float3 v0v2 = v2 - v0;
+	float3 pvec = cross(rd, v0v2);
+	float det = dot(v0v1, pvec);
+	if (abs(det) < 0.001f) return false;
+	float invDet = 1 / det;
+
+	float3 tvec = ro - v0;
+	float u = dot(tvec, pvec) * invDet;
+	if (u < 0 || u > 1) return false;
+
+	float3 qvec = cross(tvec, v0v1);
+	float v = dot(rd, qvec) * invDet;
+	if (v < 0 || u + v > 1) return false;
+
+	float t = dot(v0v2, qvec) * invDet;
+	hitpoint = float3(t, u, v);
+
+	return true;
+}
+
+bool ShadowForBox(float3 ro, float3 rd, float3 box_verts[8]) {
+	int indices_cube[36] = { 0,1,2, 2,3,0, 0,3,4, 4,5,0, 4,5,6, 6,7,4, 7,6,1, 1,2,7, 7,4,3, 3,2,7, 0,5,6, 6,1,0 };
+	float3 _ro = ro;
+	float3 _rd = normalize(rd);
+	for (int tri = 0; tri < 12; tri++) {
+		if (!(
+			tri == 2 || tri == 3 ||
+			tri == 4 || tri == 5 ||
+			tri == 8 || tri == 9 )) {
+				continue;
+			}		
+		float3 _v0 = box_verts[indices_cube[tri * 3 + 0]];
+		float3 _v1 = box_verts[indices_cube[tri * 3 + 1]];
+		float3 _v2 = box_verts[indices_cube[tri * 3 + 2]];
+		float3 _hitpoint;
+		if (ComputeIntersectionRT(_v0, _v1, _v2, _rd, _ro, _hitpoint)) {
+			return true;
+		}
+	}
+	return false;
+}

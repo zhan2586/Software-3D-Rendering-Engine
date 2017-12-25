@@ -1,6 +1,6 @@
 # Software 3D Rendering Engine 
 
-This project is to demonstrate rasteraization 3D rendering pipeline in software. Every rendering stage of the project was implemented from scratch using conventional algorithms, for example, camera projection, texture lookup, framebuffer, lighting, shadow, 3D mathematics, .etc. Moreover, this project also has functions to put the software rendering pipeline to GPU using CG shader.
+This project is to demonstrate rasteraization 3D rendering pipeline in software. Every rendering stage of the project was implemented from scratch using conventional algorithms with pure C++ code, for example, camera projection, texture lookup, framebuffer, lighting, shadow, 3D mathematics, .etc. Moreover, this project also provides functions to extend the software rendering pipeline to GPU using CG shader.
 
 ## Environment
 * Windows 10 x64  
